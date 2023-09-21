@@ -11,16 +11,16 @@ const Product = require("../models/product");
 router.get("/", (req, res, next) => {
   Order.find()
     .select("product quantity _id")
-    .populate("product" , "name") // more like key refernceing in mysql
+    .populate("product","name")
     .exec()
     .then((result) => {
       res.status(200).json({
         count: result.length,
-        orders: result.map((result) => {
+        orders: result.map((order) => {
           return {
-            _id: result._id,
-            product: result.product,
-            quantity: result.quantity,
+            _id: order._id,
+            product: order.product,
+            quantity: order.quantity,
             requests: {
               type: "GET",
               url: "https://localhost:3000/orders/" + result._id,
@@ -30,8 +30,8 @@ router.get("/", (req, res, next) => {
       });
     })
     .catch((err) => {
-      res.status(200).json({
-        error: err,
+      res.status(500).json({
+        error: "An error occurred while fetching orders: " + err.message,
       });
     });
 });
@@ -44,6 +44,7 @@ router.post("/", (req, res, next) => {
   }
 
   Product.findById(req.body.productid)
+  .populate("Product", "name")
     .then((product) => {
       if (!product) {
         return res.status(404).json({
