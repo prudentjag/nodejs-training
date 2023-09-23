@@ -1,34 +1,47 @@
 const express = require("express");
 
 const router = express.Router();
+const fs = require('fs')
 
 const mongoose = require("mongoose");
+const checkAuth = require("../middleware/check_auth");
 
 const multer = require("multer");
 
-const fileFIlter = (req, file, cb) => {
-  // reject a file
-  if (file.mimetype == "image/jpeg" || file.mimetype == "image/png") {
+// Create the uploads directory if it doesn't exist
+const uploadDirectory = './uploads';
+if (!fs.existsSync(uploadDirectory)) {
+  fs.mkdirSync(uploadDirectory);
+}
+
+// Define a function to filter file types
+const fileFilter = (req, file, cb) => {
+  // Allowed file types
+  const allowedFileTypes = ['image/jpeg', 'image/png', 'image/gif'];
+
+  if (allowedFileTypes.includes(file.mimetype)) {
+    // Accept the file
     cb(null, true);
   } else {
-    cb(null, false);
+    // Reject the file
+    cb(new Error('Invalid file type. Only JPEG, PNG, and GIF files are allowed.'));
   }
 };
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "./uploads/");
+    cb(null, "./uploads");
   },
   filename: function (req, file, cb) {
-    cb(null, new Date().toISOString() + file.originalname);
-  },
+       cb(null, Date.now() + file.originalname);
+    },
 });
 const image = multer({
   storage: storage,
+  fileFilter: fileFilter,
   limits: {
     fileSize: 1024 * 1024 * 5,
   },
-  fileFIlter : fileFIlter
 });
 
 const Product = require("../models/product");
@@ -68,13 +81,13 @@ router.get("/", (req, res, next) => {
     });
 });
 
-router.post("/", image.single("product_image"), (req, res, next) => {
+router.post("/", image.single("productImage"), (req, res, next) => {
   const product = new Product({
     //geting request from front end (forms etec),
     _id: new mongoose.Types.ObjectId(),
     name: req.body.name,
     price: req.body.price,
-    productImage: req.file.productImage
+    productImage: req.file.path
   });
   product
     .save()
@@ -86,6 +99,7 @@ router.post("/", image.single("product_image"), (req, res, next) => {
           name: result.name,
           price: result.price,
           _id: result._id,
+          productImage : result.productImage,
           request: {
             type: "GET",
             url: "http://localhost:3000/products/" + result._id,
