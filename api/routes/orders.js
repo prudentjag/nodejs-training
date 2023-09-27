@@ -24,11 +24,11 @@ router.post(
 router.get(
   "/:orderId",
   checkAuth.authenticate,
-  checkAuth.restricts(["admin", "user"]),
+  checkAuth.restricts("admin", "user"),
   orderFunction.getAOrder
 );
 
-router.patch("/:orderId", checkAuth, (req, res, next) => {
+router.patch("/:orderId", checkAuth.authenticate, (req, res, next) => {
   res.status(200).json({
     message: "Update order here",
     id: req.params.orderId,
@@ -37,7 +37,7 @@ router.patch("/:orderId", checkAuth, (req, res, next) => {
 router.delete(
   "/:orderId",
   checkAuth.authenticate,
-  checkAuth.restricts(["admin", "user"]),
+  checkAuth.restricts('admin','user'), 
   orderFunction.deleteOrder
 );
 

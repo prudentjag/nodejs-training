@@ -9,7 +9,7 @@ exports.authenticate = (req, res, next) => {
      next();
    } catch (error) {
      res.status(401).json({
-       error: "Unauthenticated: " + error.message, // Improved error message
+       error: "Unauthenticated: "  // Improved error message
      });
    } 
 }
